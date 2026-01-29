@@ -13,38 +13,38 @@ class CountdownTimer {
         this.hoursEl = document.getElementById('hours');
         this.minutesEl = document.getElementById('minutes');
         this.secondsEl = document.getElementById('seconds');
-        
+
         if (this.hoursEl && this.minutesEl && this.secondsEl) {
             this.start();
         }
     }
-    
+
     start() {
         this.update();
         this.interval = setInterval(() => this.tick(), 1000);
     }
-    
+
     tick() {
         if (this.totalSeconds <= 0) {
             // Refresh page when countdown ends
             location.reload();
             return;
         }
-        
+
         this.totalSeconds--;
         this.update();
     }
-    
+
     update() {
         const hours = Math.floor(this.totalSeconds / 3600);
         const minutes = Math.floor((this.totalSeconds % 3600) / 60);
         const seconds = this.totalSeconds % 60;
-        
+
         this.hoursEl.textContent = hours.toString().padStart(2, '0');
         this.minutesEl.textContent = minutes.toString().padStart(2, '0');
         this.secondsEl.textContent = seconds.toString().padStart(2, '0');
     }
-    
+
     stop() {
         if (this.interval) {
             clearInterval(this.interval);
@@ -57,7 +57,66 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.initialCountdown) {
         new CountdownTimer(window.initialCountdown);
     }
+
+    // Initialize social proof animations
+    initSocialProof();
 });
+
+
+// ==========================================================================
+// Social Proof Animations (Persuasion Techniques)
+// ==========================================================================
+
+function initSocialProof() {
+    // Viewer count - fluctuates between 35-65
+    const viewerEl = document.getElementById('viewerCount');
+    const modalViewersEl = document.getElementById('modalViewers');
+
+    if (viewerEl) {
+        setInterval(() => {
+            const newCount = Math.floor(Math.random() * 31) + 35; // 35-65
+            viewerEl.textContent = newCount;
+            if (modalViewersEl) modalViewersEl.textContent = Math.floor(newCount / 2);
+        }, 3000 + Math.random() * 2000);
+    }
+
+    // Buyer count - occasionally increases
+    const buyerEl = document.getElementById('buyerCount');
+    if (buyerEl) {
+        let buyerCount = parseInt(buyerEl.textContent) || 127;
+        setInterval(() => {
+            if (Math.random() > 0.7) { // 30% chance to increase
+                buyerCount += Math.floor(Math.random() * 3) + 1;
+                buyerEl.textContent = buyerCount;
+
+                // Flash effect
+                buyerEl.style.transition = 'color 0.3s';
+                buyerEl.style.color = '#fbbf24';
+                setTimeout(() => {
+                    buyerEl.style.color = '';
+                }, 500);
+            }
+        }, 8000 + Math.random() * 7000);
+    }
+
+    // Spots left - slowly decreases
+    const spotsEl = document.getElementById('spotsLeft');
+    if (spotsEl) {
+        let spots = parseInt(spotsEl.textContent) || 12;
+        setInterval(() => {
+            if (spots > 3 && Math.random() > 0.6) {
+                spots--;
+                spotsEl.textContent = spots;
+
+                // Shake effect when low
+                if (spots <= 5) {
+                    spotsEl.parentElement.classList.add('shake-urgent');
+                    setTimeout(() => spotsEl.parentElement.classList.remove('shake-urgent'), 500);
+                }
+            }
+        }, 15000 + Math.random() * 10000);
+    }
+}
 
 
 // ==========================================================================
@@ -94,22 +153,22 @@ document.addEventListener('keydown', (e) => {
 
 async function submitPayment(event) {
     event.preventDefault();
-    
+
     const phoneNumber = document.getElementById('phoneNumber').value;
     const payBtn = document.getElementById('payBtn');
     const btnText = payBtn.querySelector('.btn-text');
     const btnLoading = payBtn.querySelector('.btn-loading');
-    
+
     if (!phoneNumber) {
         showNotification('Please enter your phone number', 'error');
         return;
     }
-    
+
     // Show loading state
     payBtn.disabled = true;
     btnText.style.display = 'none';
     btnLoading.style.display = 'inline';
-    
+
     try {
         const response = await fetch('/api/initiate-payment', {
             method: 'POST',
@@ -118,12 +177,12 @@ async function submitPayment(event) {
             },
             body: JSON.stringify({ phone_number: phoneNumber })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showNotification(data.message, 'success');
-            
+
             // Start polling for payment status
             if (data.transaction_id) {
                 pollPaymentStatus(data.transaction_id);
@@ -132,7 +191,7 @@ async function submitPayment(event) {
             showNotification(data.error || 'Payment failed', 'error');
             resetPayButton();
         }
-        
+
     } catch (error) {
         console.error('Payment error:', error);
         showNotification('Connection error. Please try again.', 'error');
@@ -144,7 +203,7 @@ function resetPayButton() {
     const payBtn = document.getElementById('payBtn');
     const btnText = payBtn.querySelector('.btn-text');
     const btnLoading = payBtn.querySelector('.btn-loading');
-    
+
     payBtn.disabled = false;
     btnText.style.display = 'inline';
     btnLoading.style.display = 'none';
@@ -153,12 +212,12 @@ function resetPayButton() {
 async function pollPaymentStatus(transactionId) {
     const maxAttempts = 60; // 5 minutes (every 5 seconds)
     let attempts = 0;
-    
+
     const poll = async () => {
         try {
             const response = await fetch(`/api/check-payment/${transactionId}`);
             const data = await response.json();
-            
+
             if (data.status === 'completed') {
                 showNotification('Payment successful! Unlocking VIP prediction...', 'success');
                 setTimeout(() => {
@@ -166,13 +225,13 @@ async function pollPaymentStatus(transactionId) {
                 }, 1500);
                 return;
             }
-            
+
             if (data.status === 'failed') {
                 showNotification('Payment failed. Please try again.', 'error');
                 resetPayButton();
                 return;
             }
-            
+
             // Continue polling if pending
             attempts++;
             if (attempts < maxAttempts) {
@@ -181,7 +240,7 @@ async function pollPaymentStatus(transactionId) {
                 showNotification('Payment timeout. Please check your phone.', 'warning');
                 resetPayButton();
             }
-            
+
         } catch (error) {
             console.error('Poll error:', error);
             attempts++;
@@ -190,7 +249,7 @@ async function pollPaymentStatus(transactionId) {
             }
         }
     };
-    
+
     // Start polling after 3 seconds
     setTimeout(poll, 3000);
 }
@@ -204,7 +263,7 @@ async function demoPayment() {
     const btn = event.target;
     btn.disabled = true;
     btn.textContent = 'Processing...';
-    
+
     try {
         const response = await fetch('/api/demo-payment', {
             method: 'POST',
@@ -212,9 +271,9 @@ async function demoPayment() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showNotification('Demo payment successful!', 'success');
             setTimeout(() => {
@@ -225,7 +284,7 @@ async function demoPayment() {
             btn.disabled = false;
             btn.textContent = '🧪 Demo Payment (Skip Real Payment)';
         }
-        
+
     } catch (error) {
         console.error('Demo payment error:', error);
         showNotification('Connection error', 'error');
@@ -245,7 +304,7 @@ function showNotification(message, type = 'info') {
     if (existing) {
         existing.remove();
     }
-    
+
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -253,7 +312,7 @@ function showNotification(message, type = 'info') {
         <span class="notification-message">${message}</span>
         <button class="notification-close" onclick="this.parentElement.remove()">×</button>
     `;
-    
+
     // Add styles
     notification.style.cssText = `
         position: fixed;
@@ -270,7 +329,7 @@ function showNotification(message, type = 'info') {
         animation: slideIn 0.3s ease;
         max-width: 400px;
     `;
-    
+
     // Type-specific styles
     const styles = {
         success: 'background: #22c55e; color: white;',
@@ -278,9 +337,9 @@ function showNotification(message, type = 'info') {
         warning: 'background: #f59e0b; color: white;',
         info: 'background: #3b82f6; color: white;'
     };
-    
+
     notification.style.cssText += styles[type] || styles.info;
-    
+
     // Style close button
     const closeBtn = notification.querySelector('.notification-close');
     closeBtn.style.cssText = `
@@ -293,9 +352,9 @@ function showNotification(message, type = 'info') {
         padding: 0;
         line-height: 1;
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         if (notification.parentElement) {
@@ -361,16 +420,16 @@ async function triggerPredictionGeneration() {
         const response = await fetch('/admin/generate-predictions', {
             method: 'POST'
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showNotification('Predictions generated!', 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
             showNotification(data.error || 'Generation failed', 'error');
         }
-        
+
     } catch (error) {
         console.error('Error:', error);
         showNotification('Connection error', 'error');
