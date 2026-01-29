@@ -1,0 +1,22 @@
+# Flask
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.1
+
+# Database
+SQLAlchemy==2.0.23
+
+# Scheduling
+APScheduler==3.10.4
+
+# HTTP Requests
+requests==2.31.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Date/Time handling
+pytz==2024.1
+
+# Security
+Werkzeug==3.0.1

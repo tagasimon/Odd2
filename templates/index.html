@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Main 3-Column Layout -->
+    <div class="predictions-grid">
+
+        <!-- Left Column: Free Bet History -->
+        <aside class="history-column">
+            <div class="column-header">
+                <h2>Free Bet History</h2>
+                <span class="badge badge-secondary">Last 7 days</span>
+            </div>
+            <div class="history-list">
+                {% if free_history %}
+                {% for pred in free_history %}
+                <div class="history-item {{ 'won' if pred.status == 'won' else 'lost' }}">
+                    <div class="history-date">{{ pred.created_at.strftime('%d %b') }}</div>
+                    <div class="history-info">
+                        <span class="history-matches">{{ pred.matches|length }} matches</span>
+                        <span class="history-odds">{{ "%.2f"|format(pred.total_odds) }}x</span>
+                    </div>
+                    <div class="history-status">
+                        {% if pred.status == 'won' %}
+                        <span class="status-badge won">✓ WON</span>
+                        {% else %}
+                        <span class="status-badge lost">✗ LOST</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="history-empty">
+                    <span class="empty-icon">📊</span>
+                    <p>No history yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Center Column: Current Predictions -->
+        <div class="predictions-main">
+
+            <!-- Free Prediction Card -->
+            <div class="prediction-card free-card">
+                <div class="card-header">
+                    <div class="card-badge free">
+                        <span class="badge-icon">🆓</span>
+                        FREE BET
+                    </div>
+                    <div class="card-odds">
+                        {% if current_free %}
+                        <span class="odds-value">{{ "%.2f"|format(current_free.total_odds) }}</span>
+                        <span class="odds-label">Total Odds</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if current_free %}
+                <div class="matches-list">
+                    {% for match in current_free.matches %}
+                    <div class="match-item">
+                        <div class="match-teams">
+                            <span class="team home">{{ match.team_home }}</span>
+                            <span class="vs">vs</span>
+                            <span class="team away">{{ match.team_away }}</span>
+                        </div>
+                        <div class="match-details">
+                            <span class="league">{{ match.league }}</span>
+                            <span class="time">{{ format_match_time(match.match_time) }}</span>
+                        </div>
+                        <div class="match-bet">
+                            <span class="bet-type">{{ match.bet_type }}</span>
+                            <span class="bet-odds">@ {{ "%.2f"|format(match.odds) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <div class="probability">
+                        <span class="prob-label">Success Probability</span>
+                        <span class="prob-value">{{ "%.0f"|format(current_free.success_probability * 100) }}%</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-prediction">
+                    <span class="empty-icon">⏳</span>
+                    <p>Predictions coming soon...</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- VIP Prediction Card -->
+            <div class="prediction-card vip-card {{ 'unlocked' if has_vip_access else 'locked' }}">
+                <div class="card-header">
+                    <div class="card-badge vip">
+                        <span class="badge-icon">👑</span>
+                        VIP BET
+                    </div>
+                    <div class="card-odds">
+                        {% if current_vip %}
+                        <span class="odds-value">{{ "%.2f"|format(current_vip.total_odds) }}</span>
+                        <span class="odds-label">Total Odds</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if current_vip %}
+                {% if has_vip_access %}
+                <!-- Unlocked VIP Content -->
+                <div class="matches-list">
+                    {% for match in current_vip.matches %}
+                    <div class="match-item">
+                        <div class="match-teams">
+                            <span class="team home">{{ match.team_home }}</span>
+                            <span class="vs">vs</span>
+                            <span class="team away">{{ match.team_away }}</span>
+                        </div>
+                        <div class="match-details">
+                            <span class="league">{{ match.league }}</span>
+                            <span class="time">{{ format_match_time(match.match_time) }}</span>
+                        </div>
+                        <div class="match-bet">
+                            <span class="bet-type">{{ match.bet_type }}</span>
+                            <span class="bet-odds">@ {{ "%.2f"|format(match.odds) }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <div class="probability vip">
+                        <span class="prob-label">Success Probability</span>
+                        <span class="prob-value">{{ "%.0f"|format(current_vip.success_probability * 100) }}%</span>
+                    </div>
+                    <div class="vip-unlock-badge">
+                        <span>✓ VIP UNLOCKED</span>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Locked VIP Content -->
+                <div class="matches-list blurred">
+                    {% for match in current_vip.matches %}
+                    <div class="match-item">
+                        <div class="match-teams">
+                            <span class="team home">████████</span>
+                            <span class="vs">vs</span>
+                            <span class="team away">████████</span>
+                        </div>
+                        <div class="match-details">
+                            <span class="league">██████</span>
+                            <span class="time">██:██</span>
+                        </div>
+                        <div class="match-bet">
+                            <span class="bet-type">Over █.█</span>
+                            <span class="bet-odds">@ █.██</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="vip-overlay">
+                    <div class="lock-icon">🔒</div>
+                    <h3>Unlock VIP Prediction</h3>
+                    <p class="vip-benefit">Higher success probability than free bet!</p>
+                    <div class="price-tag">
+                        <span class="price">{{ vip_price.formatted }}</span>
+                    </div>
+                    <button class="btn btn-vip" onclick="showPaymentModal()">
+                        <span class="btn-icon">👑</span>
+                        Unlock Now
+                    </button>
+                    <p class="expires-note">Access expires at next update</p>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="no-prediction">
+                    <span class="empty-icon">⏳</span>
+                    <p>VIP predictions coming soon...</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: VIP Bet History -->
+        <aside class="history-column vip-history">
+            <div class="column-header">
+                <h2>VIP Bet History</h2>
+                <span class="badge badge-vip">Last 7 days</span>
+            </div>
+            <div class="history-list">
+                {% if vip_history %}
+                {% for pred in vip_history %}
+                <div class="history-item {{ 'won' if pred.status == 'won' else 'lost' }}">
+                    <div class="history-date">{{ pred.created_at.strftime('%d %b') }}</div>
+                    <div class="history-info">
+                        <span class="history-matches">{{ pred.matches|length }} matches</span>
+                        <span class="history-odds">{{ "%.2f"|format(pred.total_odds) }}x</span>
+                    </div>
+                    <div class="history-status">
+                        {% if pred.status == 'won' %}
+                        <span class="status-badge won">✓ WON</span>
+                        {% else %}
+                        <span class="status-badge lost">✗ LOST</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="history-empty">
+                    <span class="empty-icon">👑</span>
+                    <p>No VIP history yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-backdrop" onclick="hidePaymentModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="hidePaymentModal()">&times;</button>
+            <div class="modal-header">
+                <span class="modal-icon">👑</span>
+                <h2>Unlock VIP Prediction</h2>
+            </div>
+            <div class="modal-body">
+                <div class="price-display">
+                    <span class="price-amount">{{ vip_price.formatted }}</span>
+                    <span class="price-note">One-time payment</span>
+                </div>
+
+                <form id="paymentForm" onsubmit="submitPayment(event)">
+                    <div class="form-group">
+                        <label for="phoneNumber">Mobile Money Number</label>
+                        <input type="tel" id="phoneNumber" name="phone_number" placeholder="e.g., 0771234567" required
+                            pattern="[0-9]{9,12}">
+                        <span class="input-hint">Enter your mobile money number</span>
+                    </div>
+                    <button type="submit" class="btn btn-vip btn-full" id="payBtn">
+                        <span class="btn-text">Pay {{ vip_price.formatted }}</span>
+                        <span class="btn-loading" style="display:none;">Processing...</span>
+                    </button>
+                </form>
+
+                <div class="payment-methods">
+                    <span>Supported:</span>
+                    <span class="method">MTN MoMo</span>
+                    <span class="method">Airtel Money</span>
+                </div>
+
+                <!-- Demo payment for testing -->
+                <div class="demo-section">
+                    <p class="demo-note">For testing purposes:</p>
+                    <button class="btn btn-outline btn-full" onclick="demoPayment()">
+                        🧪 Demo Payment (Skip Real Payment)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pass countdown data to JavaScript
+        window.initialCountdown = {
+            hours: {{ countdown.hours }},
+        minutes: { { countdown.minutes } },
+        seconds: { { countdown.seconds } }
+    };
+    </script>
+    {% endblock %}
