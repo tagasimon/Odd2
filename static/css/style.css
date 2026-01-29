@@ -545,7 +545,7 @@ body {
 .matches-list.blurred {
     filter: blur(6px);
     user-select: none;
-    pointer-events: none;
+    cursor: pointer;
 }
 
 .match-item {

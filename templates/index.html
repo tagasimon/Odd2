@@ -138,7 +138,7 @@
                 </div>
                 {% else %}
                 <!-- Locked VIP Content -->
-                <div class="matches-list blurred">
+                <div class="matches-list blurred" onclick="showPaymentModal()" style="cursor: pointer;">
                     {% for match in current_vip.matches %}
                     <div class="match-item">
                         <div class="match-teams">
