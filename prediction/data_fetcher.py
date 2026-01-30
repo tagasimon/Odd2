@@ -50,19 +50,19 @@ class FootballDataFetcher:
             print(f"Request error: {e}")
             return None
     
-    def get_upcoming_matches(self, days=2):
+    def get_upcoming_matches(self, days=0):
         """
-        Get upcoming matches for the next N days
+        Get upcoming matches for today (or next N days if specified)
         
         Args:
-            days: Number of days to look ahead
+            days: Number of days to look ahead (0 = today only)
             
         Returns:
             List of match dictionaries
         """
-        # Date range for matches
+        # Date range for matches - default to today only
         date_from = datetime.now().strftime('%Y-%m-%d')
-        date_to = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d')
+        date_to = (datetime.now() + timedelta(days=max(0, days))).strftime('%Y-%m-%d')
         
         matches = []
         

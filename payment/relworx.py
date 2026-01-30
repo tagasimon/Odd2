@@ -20,7 +20,9 @@ class RelworxPayment:
         self.api_key = Config.RELWORX_API_KEY
         self.api_secret = Config.RELWORX_API_SECRET
         self.webhook_secret = Config.RELWORX_WEBHOOK_SECRET
+        self.account_no = Config.RELWORX_ACCOUNT_NO
         self.base_url = Config.RELWORX_API_BASE_URL
+        self.proxy_url = Config.RELWORX_PROXY_URL
     
     def _generate_signature(self, payload):
         """Generate HMAC signature for API request"""
@@ -33,8 +35,13 @@ class RelworxPayment:
         return signature
     
     def _make_request(self, endpoint, method='POST', data=None):
-        """Make authenticated API request"""
-        url = f"{self.base_url}{endpoint}"
+        """Make authenticated API request (via proxy if configured)"""
+        # Use proxy URL if configured, otherwise direct to Relworx API
+        if self.proxy_url:
+            # Proxy handles forwarding to Relworx
+            url = self.proxy_url
+        else:
+            url = f"{self.base_url}{endpoint}"
         
         headers = {
             'Content-Type': 'application/json',
@@ -44,11 +51,24 @@ class RelworxPayment:
         if data:
             headers['X-Signature'] = self._generate_signature(data)
         
+        # If using proxy, include the actual endpoint in the request body
+        request_data = data
+        if self.proxy_url and data:
+            request_data = {
+                **data,
+                '_endpoint': endpoint,
+                '_method': method
+            }
+        
         try:
             if method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=30)
+                response = requests.post(url, json=request_data, headers=headers, timeout=30)
             else:
-                response = requests.get(url, headers=headers, timeout=30)
+                # For GET requests with proxy, send endpoint info
+                if self.proxy_url:
+                    response = requests.post(url, json={'_endpoint': endpoint, '_method': 'GET'}, headers=headers, timeout=30)
+                else:
+                    response = requests.get(url, headers=headers, timeout=30)
             
             return {
                 'success': response.status_code in [200, 201],

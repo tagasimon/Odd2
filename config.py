@@ -4,7 +4,9 @@ Odd 2 - Configuration Settings
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env first, then .env.local to override with local values
+load_dotenv('.env')
+load_dotenv('.env.local', override=True)
 
 
 class Config:
@@ -26,7 +28,10 @@ class Config:
     RELWORX_API_KEY = os.getenv('RELWORX_API_KEY', '')
     RELWORX_API_SECRET = os.getenv('RELWORX_API_SECRET', '')
     RELWORX_WEBHOOK_SECRET = os.getenv('RELWORX_WEBHOOK_SECRET', '')
+    RELWORX_ACCOUNT_NO = os.getenv('RELWORX_ACCOUNT_NO', '')
     RELWORX_API_BASE_URL = 'https://api.relworx.com/v1'
+    # Proxy URL for static IP (to bypass Relworx IP whitelist)
+    RELWORX_PROXY_URL = os.getenv('RELWORX_PROXY_URL', '')
     
     # Timezone (East Africa Time)
     TIMEZONE = os.getenv('TIMEZONE', 'Africa/Kampala')

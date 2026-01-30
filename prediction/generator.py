@@ -29,9 +29,9 @@ class PredictionGenerator:
         """
         print("🔄 Starting prediction generation...")
         
-        # Step 1: Fetch upcoming matches
-        matches = self.fetcher.get_upcoming_matches(days=2)
-        print(f"   Found {len(matches)} upcoming matches")
+        # Step 1: Fetch today's matches only
+        matches = self.fetcher.get_upcoming_matches(days=0)
+        print(f"   Found {len(matches)} matches for today")
         
         if not matches:
             print("⚠️  No matches found")
@@ -61,9 +61,21 @@ class PredictionGenerator:
         # Step 4: Rank combinations by success probability
         ranked = sorted(combinations_list, key=lambda x: x['success_probability'], reverse=True)
         
-        # Step 5: Select VIP (highest probability) and Free (second best)
+        # Step 5: Select VIP (highest probability)
         vip = ranked[0]
-        free = ranked[1] if len(ranked) > 1 else ranked[0]
+        vip_match_ids = set(m.get('match_id') or f"{m['home_team']}-{m['away_team']}" for m in vip['matches'])
+        
+        # Step 6: Select FREE (best combination with NO overlapping matches)
+        free = None
+        for combo in ranked[1:]:
+            combo_match_ids = set(m.get('match_id') or f"{m['home_team']}-{m['away_team']}" for m in combo['matches'])
+            if not combo_match_ids.intersection(vip_match_ids):
+                free = combo
+                break
+        
+        # Fallback if no non-overlapping combo found
+        if not free:
+            free = ranked[1] if len(ranked) > 1 else ranked[0]
         
         print(f"✅ Generated predictions:")
         print(f"   VIP: {len(vip['matches'])} matches, {vip['total_odds']:.2f} odds, {vip['success_probability']*100:.1f}% probability")
@@ -91,14 +103,14 @@ class PredictionGenerator:
             if not best_bet:
                 return None
             
-            # Estimate odds
-            odds = OddsEstimator.estimate_over_odds(
-                best_bet['threshold'],
+            # Estimate realistic market odds
+            odds = OddsEstimator.get_realistic_odds(
+                best_bet['bet_type'],
                 best_bet['probability']
             )
             
-            # Only include if odds are worthwhile (>= 1.15)
-            if odds < 1.15:
+            # Only include if odds are worthwhile (>= 1.20 for meaningful odds)
+            if odds < 1.20:
                 return None
             
             return {
@@ -118,7 +130,7 @@ class PredictionGenerator:
     
     def _generate_combinations(self, matches, min_size=2, max_size=5):
         """
-        Generate all valid bet combinations with total odds >= 2.0
+        Generate all valid bet combinations with total odds between 2.0-2.5 and high success rate
         
         Args:
             matches: List of analyzed match dicts
@@ -126,9 +138,14 @@ class PredictionGenerator:
             max_size: Maximum number of matches in combination
             
         Returns:
-            List of valid combinations
+            List of valid combinations with >80% success probability
         """
         valid_combinations = []
+        
+        # Target odds range for high success rate
+        min_odds = 2.0
+        max_odds = 2.5
+        min_success_prob = 0.80  # 80% minimum success probability
         
         # Try combinations of different sizes
         for size in range(min_size, min(max_size + 1, len(matches) + 1)):
@@ -138,18 +155,41 @@ class PredictionGenerator:
                 for match in combo:
                     total_odds *= match['odds']
                 
-                # Check if meets minimum odds requirement
-                if total_odds >= self.min_total_odds:
+                # Check if odds are in target range (2.0 - 2.5)
+                if min_odds <= total_odds <= max_odds:
                     # Calculate combined success probability
                     success_prob = self.analyzer.calculate_combined_probability(
                         [{'probability': m['probability']} for m in combo]
                     )
                     
-                    valid_combinations.append({
-                        'matches': list(combo),
-                        'total_odds': round(total_odds, 2),
-                        'success_probability': success_prob
-                    })
+                    # Only include if success probability > 80%
+                    if success_prob >= min_success_prob:
+                        valid_combinations.append({
+                            'matches': list(combo),
+                            'total_odds': round(total_odds, 2),
+                            'success_probability': success_prob
+                        })
+        
+        # If no combinations meet strict criteria, relax slightly
+        if not valid_combinations:
+            print("   ⚠️ No high-success combinations found, relaxing criteria...")
+            for size in range(min_size, min(max_size + 1, len(matches) + 1)):
+                for combo in combinations(matches, size):
+                    total_odds = 1.0
+                    for match in combo:
+                        total_odds *= match['odds']
+                    
+                    # Relaxed: 1.8 - 3.0 odds, 60% probability
+                    if 1.8 <= total_odds <= 3.0:
+                        success_prob = self.analyzer.calculate_combined_probability(
+                            [{'probability': m['probability']} for m in combo]
+                        )
+                        if success_prob >= 0.60:
+                            valid_combinations.append({
+                                'matches': list(combo),
+                                'total_odds': round(total_odds, 2),
+                                'success_probability': success_prob
+                            })
         
         return valid_combinations
     

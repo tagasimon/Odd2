@@ -261,29 +261,7 @@
                 <span><strong id="modalViewers">23</strong> others looking at this</span>
             </div>
 
-            <div class="modal-header">
-                <span class="modal-icon">👑</span>
-                <h2>Unlock VIP Prediction</h2>
-            </div>
-
             <div class="modal-body">
-                <!-- Win rate comparison -->
-                <div class="modal-comparison">
-                    <div class="modal-compare-box">
-                        <span class="modal-compare-label">VIP Success Rate</span>
-                        <span class="modal-compare-value">{{ "%.0f"|format(current_vip.success_probability * 100) if
-                            current_vip else 48 }}%</span>
-                        <span class="modal-compare-note">vs {{ "%.0f"|format(current_free.success_probability * 100) if
-                            current_free else 42 }}% free</span>
-                    </div>
-                </div>
-
-                <!-- Testimonial -->
-                <div class="testimonial">
-                    <div class="testimonial-text">"Won 3 out of 4 VIP bets this week! 🔥"</div>
-                    <div class="testimonial-author">— David K., Kampala</div>
-                </div>
-
                 <div class="price-display">
                     <span class="price-was">Was {{ vip_price.currency }} {{ (vip_price.amount * 2)|int }}</span>
                     <span class="price-amount">{{ vip_price.formatted }}</span>
@@ -322,13 +300,7 @@
                     <span class="method">Airtel Money</span>
                 </div>
 
-                <!-- Demo payment for testing -->
-                <div class="demo-section">
-                    <p class="demo-note">For testing purposes:</p>
-                    <button class="btn btn-outline btn-full" onclick="demoPayment()">
-                        🧪 Demo Payment (Skip Real Payment)
-                    </button>
-                </div>
+
             </div>
         </div>
     </div>
