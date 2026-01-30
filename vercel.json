@@ -15,13 +15,5 @@
       "src": "/(.*)",
       "dest": "/api/index.py"
     }
-  ],
-  "env": {
-    "FLASK_SECRET_KEY": "@flask_secret_key",
-    "FOOTBALL_API_KEY": "@football_api_key",
-    "RELWORX_API_KEY": "@relworx_api_key",
-    "RELWORX_ACCOUNT_NO": "@relworx_account_no",
-    "RELWORX_PROXY_URL": "@relworx_proxy_url",
-    "EXCHANGE_RATE_API_KEY": "@exchange_rate_api_key"
-  }
+  ]
 }
