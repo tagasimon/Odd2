@@ -1,6 +1,7 @@
 """
 Odd 2 - Main Flask Application
 Football Predictions Website with AI-powered "over goals" predictions
+Version: 1.0.0 - January 2026
 """
 import os
 from datetime import datetime, timedelta
